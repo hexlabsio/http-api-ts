@@ -48,13 +48,7 @@ jobs:
       run: npm pack
 
     - name: Authenticate with NPM registry
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+      run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
 
     - name: Publish NPM package
       run: npm publish --access public
-
-    - name: Upload Package
-      uses: actions/upload-artifact@v1
-      with:
-        name: package
-        path: apigateway-ts-1.0.${{ steps.buildnumber.outputs.build_number }}.tgz
