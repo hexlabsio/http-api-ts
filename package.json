@@ -1,5 +1,5 @@
 {
-  "name": "apigateway-ts",
+  "name": "@hexlabs/apigateway-ts",
   "sideEfects": false,
   "version": "1.0.0",
   "main": "dist/index.js",
