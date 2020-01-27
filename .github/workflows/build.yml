@@ -47,8 +47,8 @@ jobs:
     - name: Package
       run: npm pack
 
-    - name: Upload Template
+    - name: Upload Package
       uses: actions/upload-artifact@v1
       with:
         name: package
-        path: apigateway-ts
+        path: apigateway-ts-1.0.${{ steps.buildnumber.outputs.build_number }}.tgz
