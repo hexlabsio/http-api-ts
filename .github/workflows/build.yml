@@ -1,0 +1,54 @@
+name: Build
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2.0.0
+
+    - name: Generate build number
+      id: buildnumber
+      uses: einaregilsson/build-number@v2
+      with:
+        token: ${{ secrets.github_token }}
+        prefix: ${{ github.ref }}
+
+    - name: Set Version
+      run: npm --no-git-tag-version version 1.0.${{ steps.buildnumber.outputs.build_number }}
+      
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    
+    - name: Install
+      run: npm install
+      
+    - name: Lint
+      run: npm run lint
+    
+    - name: Test
+      run: npm test
+      env: { CI: true }
+      
+    - name: Production Build
+      run: npm ci && npm run build
+      env: { CI: true }
+
+    - name: Package
+      run: npm pack
+
+    - name: Upload Template
+      uses: actions/upload-artifact@v1
+      with:
+        name: package
+        path: apigateway-ts
