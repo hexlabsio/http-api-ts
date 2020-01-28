@@ -83,16 +83,19 @@ describe('API', () => {
   });
 
   describe('filter', () => {
-    const addEventHeader: (event: APIGatewayProxyEvent, key: string, value: string) => APIGatewayProxyEvent = 
-    (event, key, value) => {
-      const currentHeader = (event.headers && event.headers[key]) ? event.headers[key] : ""
-      const currentMultiHeader = (event.multiValueHeaders && event.multiValueHeaders[key]) ? event.multiValueHeaders[key] : []
-      return {
-        ...event,
-        multiValueHeaders: { ...event.multiValueHeaders, [key]: [value, ...currentMultiHeader] },
-        headers: { ...event.headers, [key]: value + currentHeader }
+    const modifyEventFilter: (mod: (event: APIGatewayProxyEvent) => APIGatewayProxyEvent) => Filter =
+        mod => (handler: Handler) => async (ev: APIGatewayProxyEvent) => handler(mod(ev))
+      
+    const addEventHeader: (event: APIGatewayProxyEvent, key: string, value: string) => APIGatewayProxyEvent =
+      (event, key, value) => {
+        const currentHeader = event.headers?.[key] ?? ""
+        const currentMultiHeader = event?.multiValueHeaders?.[key] ?? []
+        return {
+          ...event,
+          multiValueHeaders: { ...event.multiValueHeaders, [key]: [value, ...currentMultiHeader] },
+          headers: { ...event.headers, [key]: value + currentHeader }
+        }
       }
-    }
     const echoHandler: Handler = async request => ({
       statusCode: 200,
       headers: request.headers,
@@ -100,19 +103,18 @@ describe('API', () => {
     } as APIGatewayProxyResult)
 
     it('can manipulate event before calling handler', async () => {
-      const addRequestHeader: Filter = handler => async event =>
-        handler(addEventHeader(event, "hello", "world"));
-
+      const addRequestHeader: Filter =
+        modifyEventFilter(event => addEventHeader(event, "hello", "world"));
       const api = routes([bind(HttpMethod.POST, echoHandler)], [addRequestHeader]);
       const addHeaderRes = await api({ resource: "/", httpMethod: "POST" } as APIGatewayProxyEvent);
       const { headers, multiValueHeaders } = addHeaderRes;
-      expect((headers) ? headers["hello"] : "").toEqual("world");
-      expect((multiValueHeaders) ? multiValueHeaders["hello"] : []).toEqual(["world"]);
+      expect(headers?.["hello"] ?? "").toEqual("world");
+      expect(multiValueHeaders?.["hello"] ?? []).toEqual(["world"]);
     });
 
     it('can manipulate result after calling handler', async () => {
-      const makeItErr: Filter = handler => async event => {
-        const res = handler(event)
+      const makeItErr: Filter = handler => async event =>  {
+        const res = await handler(event)
         return {
           ...res,
           statusCode: 500
@@ -125,15 +127,15 @@ describe('API', () => {
 
     it('should apply filters in order', async () => {
       const filterChain: Filter[] = [
-        handler => async event => handler(addEventHeader(event, "hello", "1")),
-        handler => async event => handler(addEventHeader(event, "hello", "2")),
-        handler => async event => handler(addEventHeader(event, "hello", "3"))
+        modifyEventFilter(event => addEventHeader(event, "hello", "1")),
+        modifyEventFilter(event => addEventHeader(event, "hello", "2")),
+        modifyEventFilter(event => addEventHeader(event, "hello", "3"))
       ];
       const api = routes([bind(HttpMethod.POST, echoHandler)], filterChain);
       const addHeaderRes = await api({ resource: "/", httpMethod: "POST" } as APIGatewayProxyEvent);
       const { headers, multiValueHeaders } = addHeaderRes;
-      expect((headers) ? headers["hello"] : "").toEqual("123");
-      expect((multiValueHeaders) ? multiValueHeaders["hello"] : []).toEqual(["1", "2", "3"]);
+      expect(headers?.["hello"] ?? "").toEqual("123");
+      expect(multiValueHeaders?.["hello"] ?? []).toEqual(["1", "2", "3"]);
     });
 
   });
