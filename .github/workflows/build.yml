@@ -48,7 +48,9 @@ jobs:
       run: npm pack
 
     - name: Authenticate with NPM registry
+      if: github.ref == 'refs/heads/master'
       run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
 
     - name: Publish NPM package
+      if: github.ref == 'refs/heads/master'
       run: npm publish --access public
