@@ -1,4 +1,4 @@
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 
 export enum HttpMethod {
   GET = 'GET',
@@ -17,6 +17,7 @@ export interface Api {
 }
 
 export type Handler = (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>
+export type Filter = (handler: Handler) => Handler
 
 export interface RoutingHttpHandler extends Handler {
   resource?: string;
@@ -26,22 +27,23 @@ export interface RoutingHttpHandler extends Handler {
 function matches(actual: string, partial: string): boolean {
   const actualParts = actual.split('/');
   const partialParts = partial.split('/');
-  if(partialParts.length <= actualParts.length) {
+  if (partialParts.length <= actualParts.length) {
     return partialParts.every((it, index) => it === actualParts[index])
   }
   return false;
 }
 
-export function routes(routes: RoutingHttpHandler[], notFoundResponse: APIGatewayProxyResult = {statusCode: 404, body: ''}): Handler {
+export function routes(routes: RoutingHttpHandler[], filters: Filter[] = [], notFoundResponse: APIGatewayProxyResult = { statusCode: 404, body: '' }): Handler {
   return async (event) => {
     const route = routes.find(route => {
       const methodMatch = route.method ? route.method === event.httpMethod : true;
       const resourceMatch = matches(event.resource || '/', route.resource || '/');
       return methodMatch && resourceMatch;
     });
-    if(route) {
-      const nextResource = route.resource ? event.resource.substring(route.resource.length) : event.resource;
-      return await route({...event, resource: nextResource});
+    if (route) {
+      const filterRoute = filters.reduce((prev, filter) => filter(prev), route);
+      const nextResource = filterRoute.resource ? event.resource.substring(filterRoute.resource.length) : event.resource;
+      return await filterRoute({ ...event, resource: nextResource });
     }
     return notFoundResponse;
   }
