@@ -2,7 +2,14 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 
 export enum HttpMethod {
   GET = 'GET',
-  POST = 'POST'
+  HEAD = 'HEAD',
+  POST = 'POST',
+  PUT = 'PUT',
+  DELETE = 'DELETE',
+  CONNECT = 'CONNECT',
+  OPTIONS = 'OPTIONS',
+  TRACE = 'TRACE',
+  PATCH = 'PATCH'
 }
 
 export interface Api {
@@ -29,7 +36,7 @@ export function routes(routes: RoutingHttpHandler[], notFoundResponse: APIGatewa
   return async (event) => {
     const route = routes.find(route => {
       const methodMatch = route.method ? route.method === event.httpMethod : true;
-      const resourceMatch = route.resource ? matches(event.resource, route.resource) : true;
+      const resourceMatch = matches(event.resource || '/', route.resource || '/');
       return methodMatch && resourceMatch;
     });
     if(route) {
@@ -40,17 +47,17 @@ export function routes(routes: RoutingHttpHandler[], notFoundResponse: APIGatewa
   }
 }
 
-export function route(resource: string | undefined, method: HttpMethod | undefined, handler: Handler): RoutingHttpHandler {
+export function router(resource: string | undefined, method: HttpMethod | undefined, handler: Handler): RoutingHttpHandler {
   const a: any = (event: APIGatewayProxyEvent) => handler(event);
   a.resource = resource;
   a.method = method;
   return a;
 }
 
-export function router(resource: string, handler: Handler): RoutingHttpHandler {
-  return route(resource, undefined, handler);
+export function route(resource: string, handler: Handler): RoutingHttpHandler {
+  return router(resource, undefined, handler);
 }
 
 export function bind(method: HttpMethod, handler: Handler): RoutingHttpHandler {
-  return route(undefined, method, handler);
+  return router(undefined, method, handler);
 }
