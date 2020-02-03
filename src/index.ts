@@ -42,7 +42,7 @@ export function routes(routes: RoutingHttpHandler[], filters: Filter[] = [], not
     });
     if (route) {
       const filterRoute = filters.reduce((prev, filter) => filter(prev), route);
-      const nextResource = filterRoute.resource ? event.resource.substring(filterRoute.resource.length) : event.resource;
+      const nextResource = route.resource ? event.resource.substring(route.resource.length) : event.resource;
       return await filterRoute({ ...event, resource: nextResource });
     }
     return notFoundResponse;

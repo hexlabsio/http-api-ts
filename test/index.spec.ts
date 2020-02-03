@@ -136,6 +136,25 @@ describe('API', () => {
       expect((multiValueHeaders) ? multiValueHeaders["hello"] : []).toEqual(["1", "2", "3"]);
     });
 
+    it('should apply filters on a nested route', async () => {
+      const addRequestHeader: Filter = handler => async event =>
+        handler(addEventHeader(event, "hello", "world"));
+
+      const basePath = "/foo/bar/{barId}"
+      const api = routes([route(basePath+"/baz", bind(HttpMethod.GET, 
+        routes([route("/{bazId}", bind(HttpMethod.GET, echoHandler))])
+        ))], 
+      [addRequestHeader]);
+      const addHeaderRes = await api({ 
+        resource: basePath+"/baz/{bazId}", 
+        httpMethod: HttpMethod.GET 
+      } as APIGatewayProxyEvent);
+      const { headers, multiValueHeaders, statusCode } = addHeaderRes;
+      expect(statusCode).toEqual(200);
+      expect(headers?.["hello"] ?? "").toEqual("world");
+      expect(multiValueHeaders?.["hello"] ?? []).toEqual(["world"]);
+    });
+
   });
 
 });
