@@ -83,16 +83,16 @@ describe('API', () => {
   });
 
   describe('filter', () => {
-    const addEventHeader: (event: APIGatewayProxyEvent, key: string, value: string) => APIGatewayProxyEvent = 
-    (event, key, value) => {
-      const currentHeader = (event.headers && event.headers[key]) ? event.headers[key] : ""
-      const currentMultiHeader = (event.multiValueHeaders && event.multiValueHeaders[key]) ? event.multiValueHeaders[key] : []
-      return {
-        ...event,
-        multiValueHeaders: { ...event.multiValueHeaders, [key]: [value, ...currentMultiHeader] },
-        headers: { ...event.headers, [key]: value + currentHeader }
+    const addEventHeader: (event: APIGatewayProxyEvent, key: string, value: string) => APIGatewayProxyEvent =
+      (event, key, value) => {
+        const currentHeader = (event.headers && event.headers[key]) ? event.headers[key] : ""
+        const currentMultiHeader = (event.multiValueHeaders && event.multiValueHeaders[key]) ? event.multiValueHeaders[key] : []
+        return {
+          ...event,
+          multiValueHeaders: { ...event.multiValueHeaders, [key]: [value, ...currentMultiHeader] },
+          headers: { ...event.headers, [key]: value + currentHeader }
+        }
       }
-    }
     const echoHandler: Handler = async request => ({
       statusCode: 200,
       headers: request.headers,
@@ -103,7 +103,7 @@ describe('API', () => {
       const addRequestHeader: Filter = handler => async event =>
         handler(addEventHeader(event, "hello", "world"));
 
-      const api = routes([bind(HttpMethod.POST, echoHandler)], [addRequestHeader]);
+      const api = route("", bind(HttpMethod.POST, echoHandler), [addRequestHeader]);
       const addHeaderRes = await api({ resource: "/", httpMethod: "POST" } as APIGatewayProxyEvent);
       const { headers, multiValueHeaders } = addHeaderRes;
       expect((headers) ? headers["hello"] : "").toEqual("world");
@@ -118,7 +118,7 @@ describe('API', () => {
           statusCode: 500
         }
       };
-      const api = routes([bind(HttpMethod.POST, echoHandler)], [makeItErr]);
+      const api = route("", bind(HttpMethod.POST, echoHandler), [makeItErr]);
       const addHeaderRes = await api({ resource: "/", httpMethod: "POST" } as APIGatewayProxyEvent);
       expect(addHeaderRes.statusCode).toEqual(500);
     });
@@ -129,7 +129,7 @@ describe('API', () => {
         handler => async event => handler(addEventHeader(event, "hello", "2")),
         handler => async event => handler(addEventHeader(event, "hello", "3"))
       ];
-      const api = routes([bind(HttpMethod.POST, echoHandler)], filterChain);
+      const api = route("/", bind(HttpMethod.POST, echoHandler), filterChain);
       const addHeaderRes = await api({ resource: "/", httpMethod: "POST" } as APIGatewayProxyEvent);
       const { headers, multiValueHeaders } = addHeaderRes;
       expect((headers) ? headers["hello"] : "").toEqual("123");
@@ -141,18 +141,44 @@ describe('API', () => {
         handler(addEventHeader(event, "hello", "world"));
 
       const basePath = "/foo/bar/{barId}"
-      const api = routes([route(basePath+"/baz", bind(HttpMethod.GET, 
+      const api = routes([route(basePath + "/baz", bind(HttpMethod.GET,
         routes([route("/{bazId}", bind(HttpMethod.GET, echoHandler))])
-        ))], 
-      [addRequestHeader]);
-      const addHeaderRes = await api({ 
-        resource: basePath+"/baz/{bazId}", 
-        httpMethod: HttpMethod.GET 
+      ), [addRequestHeader])],
+        );
+      const addHeaderRes = await api({
+        resource: basePath + "/baz/{bazId}",
+        httpMethod: HttpMethod.GET
       } as APIGatewayProxyEvent);
       const { headers, multiValueHeaders, statusCode } = addHeaderRes;
       expect(statusCode).toEqual(200);
       expect(headers?.["hello"] ?? "").toEqual("world");
       expect(multiValueHeaders?.["hello"] ?? []).toEqual(["world"]);
+    });
+
+    it('should apply filters on a nested routes with filters', async () => {
+      const basePath = "/foo"
+      const routesBaz = route(basePath + "/baz", bind(
+          HttpMethod.GET, routes([
+            route("/{bazId}", bind(HttpMethod.GET, echoHandler), 
+            [handler => async event => handler(addEventHeader(event, "hello", "baz"))])])));
+      const routesBar = route(basePath + "/bar", bind(
+          HttpMethod.GET, routes([
+            route("/{barId}", bind(HttpMethod.GET, echoHandler))])),
+            [handler => async event => handler(addEventHeader(event, "hello", "bar"))]);
+      const api = routes([routesBaz, routesBar]);
+      const bazHeaderRes = await api({
+        resource: basePath + "/baz/{bazId}",
+        httpMethod: HttpMethod.GET
+      } as APIGatewayProxyEvent);
+      expect(bazHeaderRes.statusCode).toEqual(200);
+      expect(bazHeaderRes?.multiValueHeaders?.["hello"] ?? []).toEqual(["baz"]);
+
+      const barHeaderRes = await api({
+        resource: basePath + "/bar/{barId}",
+        httpMethod: HttpMethod.GET
+      } as APIGatewayProxyEvent);
+      expect(barHeaderRes.statusCode).toEqual(200);
+      expect(barHeaderRes?.multiValueHeaders?.["hello"] ?? []).toEqual(["bar"]);
     });
 
   });
