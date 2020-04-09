@@ -20,7 +20,7 @@ export type Handler = (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyRe
 export type Filter = (handler: Handler) => Handler
 
 export interface RoutingHttpHandler extends Handler {
-  resource?: string;
+  resource: string;
   method?: HttpMethod;
 }
 
@@ -33,35 +33,37 @@ function matches(actual: string, partial: string): boolean {
   return false;
 }
 
-export function routes(routes: RoutingHttpHandler[], filters: Filter[] = [], notFoundResponse: APIGatewayProxyResult = { statusCode: 404, body: '' }): Handler {
+export function routes(routes: RoutingHttpHandler[], notFoundResponse: APIGatewayProxyResult = { statusCode: 404, body: '' }): Handler {
   return async (event) => {
-    const route = routes.find(route => {
+    const rout = routes.find(route => {
       const methodMatch = route.method ? route.method === event.httpMethod : true;
       const resourceMatch = matches(event.resource || '/', route.resource || '/');
       return methodMatch && resourceMatch;
     });
-    if (route) {
-      const filterRoute = filters.reduce((prev, filter) => filter(prev), route);
-      const nextResource = route.resource ? event.resource.substring(route.resource.length) : event.resource;
-      return await filterRoute({ ...event, resource: nextResource });
+    if (rout) {
+      const nextResource = rout.resource ? event.resource.substring(rout.resource.length) : event.resource;
+      return await rout({ ...event, resource: nextResource });
     }
     return notFoundResponse;
   }
 }
 
-export function router(resource: string | undefined, method: HttpMethod | undefined, handler: Handler): RoutingHttpHandler {
+export function router(resource: string, method: HttpMethod | undefined, handler: Handler): RoutingHttpHandler {
   const a: any = (event: APIGatewayProxyEvent) => handler(event);
   a.resource = resource;
   a.method = method;
   return a;
 }
 
-export function route(resource: string, handler: Handler): RoutingHttpHandler {
-  return router(resource, undefined, handler);
+export function route(resource: string, handler: Handler, filters: Filter[] = []): RoutingHttpHandler {
+  const filter: Filter | undefined = (filters.length > 0)
+    ? filters.reduce((prev, filter) => handler => filter(prev(handler)))
+    : undefined
+  return router(resource, undefined, (filter) ? filter(handler) : handler);
 }
 
 export function bind(method: HttpMethod, handler: Handler): RoutingHttpHandler {
-  return router(undefined, method, handler);
+  return router('', method, handler);
 }
 
 export function header(event: APIGatewayProxyEvent, header: string): string | undefined {
