@@ -63,3 +63,41 @@ export function route(resource: string, handler: Handler): RoutingHttpHandler {
 export function bind(method: HttpMethod, handler: Handler): RoutingHttpHandler {
   return router(undefined, method, handler);
 }
+
+export function header(event: APIGatewayProxyEvent, header: string): string | undefined {
+  if(event.headers) {
+    const key = Object.keys(event.headers).find(it => it.toUpperCase() === header.toUpperCase());
+    return key ? event.headers[key] : undefined;
+  }
+  return undefined;
+}
+
+export const loggingFilter: Filter = (next: Handler) => {
+  return async event => {
+    console.log(`${event.httpMethod} ${event.resource}` + (event.pathParameters ? ' ' + JSON.stringify(event.pathParameters) : ''));
+    const result = await next(event);
+    console.log(`${event.httpMethod} ${event.resource} -> Responded with ${result.statusCode}`);
+    return result;
+  };
+};
+
+export function corsFilter(origin: string, methods: HttpMethod[]): Filter {
+  return next => async event => {
+    const result = await next(event);
+    return {
+      ...result,
+      headers: {
+        ...result.headers,
+        'Access-Control-Allow-Origin': (origin === '*' || (event.headers && event.headers.origin === origin)) ? origin : '',
+        'Access-Control-Allow-Methods': methods.join(),
+        'Access-Control-Allow-Headers': '*'
+      }
+    };
+  }
+}
+
+export function combine(a: Filter, b: Filter): Filter {
+  return next => {
+    return a(b(next))
+  }
+}
