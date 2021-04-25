@@ -35,7 +35,8 @@
     "rules": {
       "@typescript-eslint/no-explicit-any": 0,
       "@typescript-eslint/no-non-null-assertion": 0,
-      "@typescript-eslint/no-empty-function": 0
+      "@typescript-eslint/no-empty-function": 0,
+      "@typescript-eslint/explicit-function-return-type": 0
     }
   },
   "repository": {
@@ -68,7 +69,7 @@
   "homepage": "https://github.com/hexlabsio/apigateway-ts#readme",
   "devDependencies": {
     "@types/aws-lambda": "^8.10.40",
-    "@types/jest": "^24.0.23",
+    "@types/jest": "^24.9.1",
     "@types/node": "^12.12.14",
     "@typescript-eslint/eslint-plugin": "^2.10.0",
     "@typescript-eslint/parser": "^2.10.0",
@@ -79,6 +80,5 @@
     "jest-junit": "^10.0.0",
     "ts-jest": "^26.1.1",
     "typescript": "^3.7.3"
-  },
-  "dependencies": {}
+  }
 }
