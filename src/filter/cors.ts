@@ -5,7 +5,7 @@ export interface CorsConfig {
   headers?: 'Accept' | '*' | string[];
   methods?: '*' | string[];
   credentials?: boolean;
-  origins?: '*' | string[] | null;
+  origins?: '*' | Array<string | RegExp> | null;
   exposeHeaders?: '*' | string[];
   maxAgeSeconds?: number;
 }
