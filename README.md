@@ -111,8 +111,8 @@ const handlerWithFilters: Handler =
 ### Included Filters
 Apigateway-ts includes some useful filters as part of the library
 - corsFilter : Filter for CORS headers
-- loggingFilter: Logs Request and Response basic info
-- httpErrorFilter: Catches an errors thrown by the handler returning 500 with the thrown error message
+- loggingFilter: Logs basic Request and Response info
+- httpErrorFilter: Catches errors thrown by the handler returning 500 with the thrown error message
 
 
 
