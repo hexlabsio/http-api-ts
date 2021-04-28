@@ -1,5 +1,5 @@
 import {APIGatewayProxyEvent} from "aws-lambda";
-import {consoleLoggingFilter} from "../../dist";
+import {consoleLoggingFilter} from "../../src";
 import {loggingFilter} from "../../src";
 
 const emptyEvent = { body: 'test', resource: '/hello/{phrase}', httpMethod: 'GET', pathParameters: {phrase: 'world'} } as unknown as APIGatewayProxyEvent
