@@ -62,7 +62,7 @@ export function requiredHeaderParam(request: APIGatewayProxyEvent, pathParam: st
     throw new HttpError(400, `unable to extract header parameter ${pathParam}`);
 }
 
-export function fromJson<T>(request: APIGatewayProxyEvent): T {
+export function parseJson<T>(request: APIGatewayProxyEvent): T {
   try {
     const bodyStr = request?.body ?? '{}';
     return JSON.parse(bodyStr) as T;
@@ -76,3 +76,5 @@ export * from './http-method';
 export * from './handler';
 export * from './filter/filter';
 export * from './filter/cors';
+export * from './filter/error';
+export * from './filter/logging';
