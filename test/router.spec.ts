@@ -1,5 +1,16 @@
-import {APIGatewayProxyResult} from "aws-lambda";
-import {bind, Handler, HttpMethod, request, router} from "../src";
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import {
+  Api,
+  bind,
+  consoleLoggingFilter,
+  corsFilter,
+  Handler,
+  HttpMethod,
+  request,
+  root,
+  route,
+  router
+} from "../src";
 
 describe('router', () => {
   it('should route to resources when top level', async () => {
@@ -111,4 +122,33 @@ describe('bind', () => {
     const api = router([bind(HttpMethod.GET, fakeHandler)]);
     expect(await api(request({ resource: "/", httpMethod: "POST" }))).toEqual({ statusCode: 404, body: '' });
   });
+  
+  describe('APIs', () => {
+    class TestApi implements Api{
+      
+      handle: Handler;
+      resource = '/test';
+      
+      constructor() {
+        this.handle = router([route('/{accountId}', HttpMethod.GET, this.test)])
+      }
+      
+      async test(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+        return {statusCode: 200, body: 'OK'}
+      }
+    }
+    it('should route to api handler from root', async () => {
+      const filters = [corsFilter({methods: '*', origins: '*'}), consoleLoggingFilter];
+      const testApi = new TestApi()
+      const api = root([testApi], ...filters);
+      expect(await api({ resource: '/test/{accountId}', httpMethod: 'GET'} as APIGatewayProxyEvent)).toEqual({
+        body: 'OK',
+        headers: {
+          'Access-Control-Allow-Methods': '*',
+          'Access-Control-Allow-Origin': '*'
+        },
+        statusCode: 200
+      })
+    })
+  })
 });

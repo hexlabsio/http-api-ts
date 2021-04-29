@@ -2,8 +2,9 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {combineFilters, Filter} from "./filter/filter";
 import {Handler, RoutingHttpHandler} from "./handler";
 import {HttpMethod, httpMethodValue} from "./http-method";
+import {Api} from "./index";
 
-type ResourceInfo = [string, HttpMethod] | string | HttpMethod;
+export type ResourceInfo = [string, HttpMethod] | string | HttpMethod;
 
 function allResourceInfo(resInfo: ResourceInfo): [string, HttpMethod?] {
   if (typeof resInfo === "string")
@@ -63,4 +64,8 @@ export function bind(resourceInfo: ResourceInfo, handler: Handler, ...filters: F
   return route(resource, method,
     hasRouting(handler) ? router([handler]) : handler,
     combineFilters(filters));
+}
+
+export function root(apis: Api[], ...filters: Filter[]): Handler {
+  return router(apis.map(api => bind(api.resource, api.handle, ...filters)));
 }

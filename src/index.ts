@@ -1,10 +1,12 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
 import {Handler} from "./handler";
+import {ResourceInfo} from "./router";
 
 type StringKeys = { [key: string]: string | undefined }
 
 export interface Api {
   handle: Handler;
+  resource: ResourceInfo;
 }
 export function request(partialRequest: Partial<APIGatewayProxyEvent>): APIGatewayProxyEvent {
   return partialRequest as APIGatewayProxyEvent;
