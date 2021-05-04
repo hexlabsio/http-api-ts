@@ -37,15 +37,17 @@ function matches(actual: string, partial: string): boolean {
 
 export function router(routes: RoutingHttpHandler[], notFoundResponse: APIGatewayProxyResult = { statusCode: 404, body: '' }): Handler {
   return async event => {
+    const discovered =  (event as any)['_resource'];
+    const resource =  discovered !== undefined ? discovered : event.resource;
     const rout = routes.find(route => {
       const methodMatch = (route.method !== undefined) ? httpMethodValue(route.method) === event.httpMethod : true;
-      const resourceMatch = matches(event.resource || '/', route.resource || '/');
+      const resourceMatch = matches(resource || '/', route.resource || '/');
       return methodMatch && resourceMatch;
     });
     
     if (rout) {
-      const nextResource = rout.resource ? (event.resource ?? '').substring(rout.resource.length) : event.resource;
-      return await rout({ ...event, resource: nextResource });
+      const nextResource = rout.resource ? (resource ?? '').substring(rout.resource.length) : resource;
+      return await rout({ ...event, _resource: nextResource } as APIGatewayProxyEvent);
     }
     return notFoundResponse;
   };

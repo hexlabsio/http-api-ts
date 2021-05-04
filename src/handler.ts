@@ -7,3 +7,4 @@ export interface RoutingHttpHandler extends Handler {
   resource: string;
   method?: HttpMethod;
 }
+
