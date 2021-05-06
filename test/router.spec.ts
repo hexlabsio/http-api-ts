@@ -150,5 +150,20 @@ describe('bind', () => {
         statusCode: 200
       })
     })
+    
+    it('should', async () => {
+      const handler = router([
+        bind('/account', router([
+          bind('/{accountId}', router([
+            bind(HttpMethod.GET, async event => ({statusCode: 200, body: 'OK'})),
+            bind(HttpMethod.PATCH, async event => ({statusCode: 200, body: 'OK'})),
+          ])),
+          bind('/status', router([
+            bind(HttpMethod.GET, async event => ({statusCode: 200, body: 'OK'}))
+          ]))
+        ]))
+      ]);
+      console.log(await handler({resource: '/account/{accountId}', httpMethod: 'GET'} as unknown as APIGatewayProxyEvent));
+    })
   })
 });
