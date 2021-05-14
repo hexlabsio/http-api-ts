@@ -5,7 +5,7 @@ export type Handler = (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyRe
 export type HandlerWithParams<PathParams, QueryParams> = (event: ParameterizedEvent<PathParams, QueryParams>) => Promise<APIGatewayProxyResult>;
 export type ParameterizedEvent<PathParams, QueryParams> = APIGatewayProxyEvent & {
   pathParameters: PathParams | { [name: string]: string } | null;
-  queryParameters: QueryParams | { [name: string]: string } | null;
+  queryStringParameters: QueryParams | { [name: string]: string } | null;
 }
 
 export interface RoutingHttpHandler extends Handler {
