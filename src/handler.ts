@@ -2,7 +2,7 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {HttpMethod} from "./http-method";
 
 export type Handler = (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>;
-export type HandlerWithParams<PathParams, QueryParams> = (event: ParameterizedEvent<PathParams, QueryParams>) => Promise<APIGatewayProxyResult>;
+export type HandlerWithParams<PathParams, QueryParams extends {} = {}> = (event: ParameterizedEvent<PathParams, QueryParams>) => Promise<APIGatewayProxyResult>;
 export type ParameterizedEvent<PathParams, QueryParams> = APIGatewayProxyEvent & {
   pathParameters: PathParams | { [name: string]: string } | null;
   queryStringParameters: QueryParams | { [name: string]: string } | null;
