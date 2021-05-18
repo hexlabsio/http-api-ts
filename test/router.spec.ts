@@ -132,8 +132,8 @@ describe('bind', () => {
       constructor() {
         this.handle = router([route('/{accountId}', HttpMethod.GET, this.test)])
       }
-      
-      async test(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+  
+      async test(): Promise<APIGatewayProxyResult> {
         return {statusCode: 200, body: 'OK'}
       }
     }
@@ -149,21 +149,6 @@ describe('bind', () => {
         },
         statusCode: 200
       })
-    })
-    
-    it('should', async () => {
-      const handler = router([
-        bind('/account', router([
-          bind('/{accountId}', router([
-            bind(HttpMethod.GET, async event => ({statusCode: 200, body: 'OK'})),
-            bind(HttpMethod.PATCH, async event => ({statusCode: 200, body: 'OK'})),
-          ])),
-          bind('/status', router([
-            bind(HttpMethod.GET, async event => ({statusCode: 200, body: 'OK'}))
-          ]))
-        ]))
-      ]);
-      console.log(await handler({resource: '/account/{accountId}', httpMethod: 'GET'} as unknown as APIGatewayProxyEvent));
     })
   })
 });

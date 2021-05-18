@@ -65,7 +65,7 @@ export function bind(resourceInfo: ResourceInfo, handler: Handler, ...filters: F
   const [resource, method] = allResourceInfo(resourceInfo);
   return route(resource, method,
     hasRouting(handler) ? router([handler]) : handler,
-    combineFilters(filters));
+    combineFilters(...filters));
 }
 
 export function root(apis: Api[], ...filters: Filter[]): Handler {

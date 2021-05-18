@@ -5,7 +5,7 @@ describe('filter', () => {
   const addEventHeader: (event: APIGatewayProxyEvent, key: string, value: string) => APIGatewayProxyEvent =
     (event, key, value) => {
       const currentHeader = (event.headers && event.headers[key]) ? event.headers[key] : "";
-      const currentMultiHeader = (event.multiValueHeaders && event.multiValueHeaders[key]) ? event.multiValueHeaders[key] : [];
+      const currentMultiHeader = (event.multiValueHeaders && event.multiValueHeaders[key]) ? event.multiValueHeaders[key] ?? [] : [];
       return {
         ...event,
         multiValueHeaders: { ...event.multiValueHeaders, [key]: [value, ...currentMultiHeader] },
