@@ -69,6 +69,7 @@
   "homepage": "https://github.com/hexlabsio/apigateway-ts#readme",
   "devDependencies": {
     "@types/aws-lambda": "^8.10.76",
+    "@types/aws-sdk": "^2.7.0",
     "@types/jest": "^24.9.1",
     "@types/node": "^12.12.14",
     "@typescript-eslint/eslint-plugin": "^4.24.0",
