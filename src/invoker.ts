@@ -29,7 +29,7 @@ export class Invoker {
   
   static httpInvoker(uri: string): Caller {
     return { call: (async (method, resource, path, body, pathParameters, queryParameters, headers) => {
-        const result = await axios(uri + path, {method: method as any, data: body, params: pathParameters, headers});
+        const result = await axios(uri + path, {method: method as any, data: body, params: pathParameters, headers, transformResponse: []});
         return {statusCode: result.status, body: result.data, headers: result.headers as any};
       }) };
   }
