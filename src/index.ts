@@ -81,3 +81,4 @@ export * from './filter/cors';
 export * from './filter/error';
 export * from './filter/logging';
 export * from './filter/content-type';
+export * from './filter/version-filter';
