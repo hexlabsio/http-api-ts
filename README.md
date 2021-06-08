@@ -113,6 +113,7 @@ Apigateway-ts includes some useful filters as part of the library
 - corsFilter : Filter for CORS headers
 - loggingFilter: Logs basic Request and Response info
 - httpErrorFilter: Catches errors thrown by the handler returning 500 with the thrown error message
-
+- contentType : Sets the content type to whatever you want it to be
+- versionFilter: Takes a version argument and logs warnings if header (default X-API-VERSION) does not match
 
 
