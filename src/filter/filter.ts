@@ -7,10 +7,9 @@ function combine(a: Filter, b: Filter): Filter {
   return next => a(b(next));
 }
 
-export function combineFilters(...filters: Filter[]): Filter | undefined {
-  return (filters.length > 0)
-    ? filters.reduce((prev, filter) => combine(filter, prev))
-    : undefined;
+export function combineFilters(...filters: Filter[]): Filter {
+  if(filters.length === 0) return next => async event => next(event);
+  return filters.reduce((prev, filter) => combine(filter, prev))
 }
 
 export function withFilters<T extends Handler>(handler: T, ...filters: Filter[]): T {
