@@ -15,6 +15,11 @@ type Caller = {
   ): Promise<{ statusCode: number; body: string; headers: Record<string, string> }>
 }
 
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => Promise.reject(new Error(error.message))
+);
+
 export class Invoker {
   
   static lambdaInvoker(arn: string, lambda = new Lambda()): Caller {
