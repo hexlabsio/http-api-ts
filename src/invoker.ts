@@ -36,7 +36,11 @@ export class Invoker {
   
   static httpInvoker(uri: string): Caller {
     return { call: (async (method, resource, path, body, pathParameters, queryParameters, multiQueryParameters, headers) => {
-        const result = await axios(uri + path, {method: method as any, data: body, params: { ...queryParameters, ...multiQueryParameters} , headers, transformResponse: []});
+        const multi = multiQueryParameters ?? {};
+        const param = queryParameters ?? {};
+        const multiParams = Object.keys(multi).reduce((params, key) => {multi[key].forEach(item => params.append(key, item)); return params;}, new URLSearchParams());
+        const params = Object.keys(param).reduce((p, key) => {p.append(key, param[key]); return p;}, multiParams);
+        const result = await axios(uri + path, {method: method as any, data: body, params , headers, transformResponse: []});
         return {statusCode: result.status, body: result.data, headers: result.headers as any};
       }) };
   }
