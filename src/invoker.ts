@@ -40,7 +40,7 @@ export class Invoker {
         const param = queryParameters ?? {};
         const multiParams = Object.keys(multi).reduce((params, key) => {multi[key].forEach(item => params.append(key, item)); return params;}, new URLSearchParams());
         const params = Object.keys(param).reduce((p, key) => {p.append(key, param[key]); return p;}, multiParams);
-        const result = await axios(uri + path, {method: method as any, data: body, params , headers, transformResponse: []});
+        const result = await axios(uri + path, {method: method as any, data: body, params , headers, transformResponse: [], validateStatus: (status) => status < 500});
         return {statusCode: result.status, body: result.data, headers: result.headers as any};
       }) };
   }
