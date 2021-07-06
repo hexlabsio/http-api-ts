@@ -1,14 +1,10 @@
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {HttpMethod} from "./http-method";
 
-export type Handler = (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>;
-export type HandlerWithParams<PathParams, QueryParams extends Record<string, unknown> = Record<string, unknown>> = (event: ParameterizedEvent<PathParams, QueryParams>) => Promise<APIGatewayProxyResult>;
-export type ParameterizedEvent<PathParams, QueryParams> = APIGatewayProxyEvent & {
-  pathParameters: PathParams | { [name: string]: string } | null;
-  queryStringParameters: QueryParams | { [name: string]: string } | null;
-}
+export type Request = { resource: string, httpMethod: string, headers?: any };
 
-export interface RoutingHttpHandler extends Handler {
+export type Handler<Req extends Request = Request, Res = any> = (request: Req) => Promise<Res>;
+
+export interface RoutingHttpHandler<Req extends Request,Res> extends Handler<Req, Res> {
   resource: string;
   method?: HttpMethod;
 }

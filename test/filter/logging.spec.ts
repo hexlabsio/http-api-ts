@@ -1,4 +1,4 @@
-import {APIGatewayProxyEvent} from "aws-lambda";
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {consoleLoggingFilter} from "../../src";
 import {loggingFilter} from "../../src";
 
@@ -16,7 +16,7 @@ describe('Logging Filter', () => {
   
   it('should log to console log when console logger', async () => {
     console.log = jest.fn();
-    const handler = consoleLoggingFilter(async () => ({ statusCode: 403, body: 'FORBIDDEN' }));
+    const handler = consoleLoggingFilter<APIGatewayProxyEvent, APIGatewayProxyResult>()(async () => ({ statusCode: 403, body: 'FORBIDDEN' }));
     expect(await handler(emptyEvent)).toEqual({statusCode: 403, body: 'FORBIDDEN'});
     expect(console.log).toHaveBeenCalledTimes(2);
     expect(console.log).toHaveBeenCalledWith('GET /hello/{phrase} {"phrase":"world"}');

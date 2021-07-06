@@ -1,5 +1,7 @@
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {bind, Filter, Handler, HttpMethod, request, route, router, withFilters} from "../../src";
+import {bind, Filter, Handler as H, HttpMethod, request, route, router, withFilters} from "../../src";
+
+type Handler = H<APIGatewayProxyEvent, APIGatewayProxyResult>
 
 describe('filter', () => {
   const addEventHeader: (event: APIGatewayProxyEvent, key: string, value: string) => APIGatewayProxyEvent =
@@ -19,7 +21,7 @@ describe('filter', () => {
   } as APIGatewayProxyResult);
   
   it('should manipulate event before calling handler', async () => {
-    const addRequestHeader: Filter = handler => async event =>
+    const addRequestHeader: Filter<APIGatewayProxyEvent, APIGatewayProxyResult> = handler => async event =>
       handler(addEventHeader(event, "hello", "world"));
     
     const api = bind(HttpMethod.POST, echoHandler, addRequestHeader);
@@ -30,7 +32,7 @@ describe('filter', () => {
   });
   
   it('should manipulate result after calling handler', async () => {
-    const makeItErr: Filter = handler => async event => {
+    const makeItErr: Filter<APIGatewayProxyEvent, APIGatewayProxyResult> = handler => async event => {
       const res = handler(event);
       return {
         ...res,
@@ -43,7 +45,7 @@ describe('filter', () => {
   });
   
   it('should apply filters in order', async () => {
-    const filterChain: Filter[] = [
+    const filterChain: Filter<APIGatewayProxyEvent, APIGatewayProxyResult>[] = [
       handler => async event => handler(addEventHeader(event, "hello", "1")),
       handler => async event => handler(addEventHeader(event, "hello", "2")),
       handler => async event => handler(addEventHeader(event, "hello", "3"))
@@ -56,7 +58,7 @@ describe('filter', () => {
   });
   
   it('should apply filters on a nested route', async () => {
-    const addRequestHeader: Filter = handler => async event =>
+    const addRequestHeader: Filter<APIGatewayProxyEvent, APIGatewayProxyResult> = handler => async event =>
       handler(addEventHeader(event, "hello", "world"));
     
     const basePath = "/foo/bar/{barId}";
@@ -78,9 +80,9 @@ describe('filter', () => {
   
   it('should apply filters on a nested routes with filters', async () => {
     const basePath = "/foo";
-    const addBazFilter: Filter = handler => async event => handler(addEventHeader(event, "hello", "baz"));
-    const addFooFilter: Filter = handler => async event => handler(addEventHeader(event, "hello", "foo"));
-    const addBarFilter: Filter = handler => async event => handler(addEventHeader(event, "hello", "bar"));
+    const addBazFilter: Filter<APIGatewayProxyEvent, APIGatewayProxyResult> = handler => async event => handler(addEventHeader(event, "hello", "baz"));
+    const addFooFilter: Filter<APIGatewayProxyEvent, APIGatewayProxyResult> = handler => async event => handler(addEventHeader(event, "hello", "foo"));
+    const addBarFilter: Filter<APIGatewayProxyEvent, APIGatewayProxyResult> = handler => async event => handler(addEventHeader(event, "hello", "bar"));
     
     
     const routesBaz = route(basePath + "/baz", HttpMethod.GET,
@@ -89,7 +91,7 @@ describe('filter', () => {
     const routesBar = bind([basePath + "/bar", HttpMethod.GET],
       bind(["/{barId}", HttpMethod.GET], echoHandler, addBarFilter)
     );
-    const api = withFilters(router([routesBaz, routesBar]), addFooFilter);
+    const api = withFilters<Handler>(router([routesBaz, routesBar]), addFooFilter);
     const bazHeaderRes = await api(request({
       resource: basePath + "/baz/{bazId}",
       httpMethod: "GET"

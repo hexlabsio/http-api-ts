@@ -1,6 +1,6 @@
-import {Filter, lookup} from "../index";
+import {Filter, lookup, Request} from "../index";
 
-export function versionFilter(version: string, header = 'X-API-VERSION'): Filter {
+export function versionFilter<Req extends Request, Res extends { headers?: any}>(version: string, header = 'X-API-VERSION'): Filter<Req, Res> {
   return next => async event => {
     console.log(`API Version: ${version}`);
     const requestedVersion = lookup(event.headers, header);

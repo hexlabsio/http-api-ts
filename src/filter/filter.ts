@@ -1,18 +1,18 @@
-import {Handler} from "../handler";
+import {Handler, Request} from "../handler";
 import {hasRouting, route} from "../router";
 
-export type Filter = (handler: Handler) => Handler;
+export type Filter<Req extends Request, Res> = (handler: Handler<Req, Res>) => Handler<Req, Res>;
 
-function combine(a: Filter, b: Filter): Filter {
+function combine<Req extends Request, Res>(a: Filter<Req, Res>, b: Filter<Req, Res>): Filter<Req, Res> {
   return next => a(b(next));
 }
 
-export function combineFilters(...filters: Filter[]): Filter {
+export function combineFilters<Req extends Request, Res>(...filters: Filter<Req, Res>[]): Filter<Req, Res> {
   if(filters.length === 0) return next => async event => next(event);
   return filters.reduce((prev, filter) => combine(filter, prev))
 }
 
-export function withFilters<T extends Handler>(handler: T, ...filters: Filter[]): T {
+export function withFilters<T extends Handler<any, any>>(handler: T, ...filters: (T extends Handler<infer Req, infer Res> ? Filter<Req, Res> : Filter<any, any>)[]): T {
   const combinedFilters = combineFilters(...filters);
   if (combinedFilters === undefined) {
     return handler;

@@ -1,7 +1,8 @@
 
-import {APIGatewayProxyEvent} from "aws-lambda";
-import {CorsConfig, corsFilter} from "../../src";
-import {Handler} from "../../src";
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import {CorsConfig, corsFilter, Handler as H} from "../../src";
+
+type Handler = H<APIGatewayProxyEvent, APIGatewayProxyResult>
 
 describe('Cors Filter', () => {
   
@@ -9,7 +10,7 @@ describe('Cors Filter', () => {
   const okHandler: Handler = async () => ({ statusCode: 200, body: 'OK' })
   
   function handlerWithCors(corsConfig: CorsConfig): Handler {
-    return corsFilter(corsConfig)(okHandler);
+    return corsFilter<APIGatewayProxyEvent, APIGatewayProxyResult>(corsConfig)(okHandler);
   }
   
   async function verifyHeaders(corsConfig: CorsConfig, match: { [key: string]: string }, event: Partial<APIGatewayProxyEvent> = emptyEvent) {

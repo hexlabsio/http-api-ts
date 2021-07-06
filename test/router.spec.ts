@@ -1,18 +1,21 @@
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {
-  Api,
-  bind,
-  consoleLoggingFilter,
-  corsFilter,
-  Handler,
+import {  bind,
+  Handler as H,
   HttpMethod,
   request,
-  root,
-  route,
-  router
+  router,
+  route
 } from "../src";
 
+type Handler = H<APIGatewayProxyEvent, APIGatewayProxyResult>
+
 describe('router', () => {
+  it('should', async () => {
+    const handler = router([
+      route('/hello', HttpMethod.GET, async () => ({statusCode: 200, body: 'world'}))
+    ]);
+    console.log(await handler({resource: '/hello', httpMethod: 'GET'}))
+  });
   it('should route to resources when top level', async () => {
     const testHandler: Handler = async () => ({ statusCode: 200, body: 'test' });
     const test2Handler: Handler = async () => ({ statusCode: 200, body: 'test2' });
@@ -123,32 +126,4 @@ describe('bind', () => {
     expect(await api(request({ resource: "/", httpMethod: "POST" }))).toEqual({ statusCode: 404, body: '' });
   });
   
-  describe('APIs', () => {
-    class TestApi implements Api{
-      
-      handle: Handler;
-      resource = '/test';
-      
-      constructor() {
-        this.handle = router([route('/{accountId}', HttpMethod.GET, this.test)])
-      }
-  
-      async test(): Promise<APIGatewayProxyResult> {
-        return {statusCode: 200, body: 'OK'}
-      }
-    }
-    it('should route to api handler from root', async () => {
-      const filters = [corsFilter({methods: '*', origins: '*'}), consoleLoggingFilter];
-      const testApi = new TestApi()
-      const api = root([testApi], ...filters);
-      expect(await api({ resource: '/test/{accountId}', httpMethod: 'GET'} as APIGatewayProxyEvent)).toEqual({
-        body: 'OK',
-        headers: {
-          'Access-Control-Allow-Methods': '*',
-          'Access-Control-Allow-Origin': '*'
-        },
-        statusCode: 200
-      })
-    })
-  })
 });

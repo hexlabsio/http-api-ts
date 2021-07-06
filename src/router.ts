@@ -1,8 +1,6 @@
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {combineFilters, Filter} from "./filter/filter";
-import {Handler, RoutingHttpHandler} from "./handler";
+import {Handler, Request, RoutingHttpHandler} from "./handler";
 import {HttpMethod, httpMethodValue} from "./http-method";
-import {Api} from "./index";
 
 export type ResourceInfo = [string, HttpMethod] | string | HttpMethod;
 
@@ -20,8 +18,8 @@ function allResourceInfo(resInfo: ResourceInfo): [string, HttpMethod?] {
     return ['/', resInfo as HttpMethod];
 }
 
-export function hasRouting(handler: Handler): handler is RoutingHttpHandler {
-  const testHandler = handler as RoutingHttpHandler;
+export function hasRouting<Req extends Request, Res>(handler: Handler<Req, Res>): handler is RoutingHttpHandler<Req, Res> {
+  const testHandler = handler as RoutingHttpHandler<Req, Res>;
   return testHandler.method !== undefined || testHandler.resource !== undefined;
 }
 
@@ -35,7 +33,7 @@ function matches(actual: string, partial: string): boolean {
 }
 
 
-export function router(routes: RoutingHttpHandler[], notFoundResponse: APIGatewayProxyResult = { statusCode: 404, body: '' }): Handler {
+export function router<Req extends Request, Res>(routes: RoutingHttpHandler<Req, Res>[], notFoundResponse: Res = { statusCode: 404, body: '' } as unknown as Res): Handler<Req, Res> {
   return async event => {
     const discovered =  (event as any)['_resource'];
     const resource =  discovered !== undefined ? discovered : event.resource;
@@ -47,27 +45,23 @@ export function router(routes: RoutingHttpHandler[], notFoundResponse: APIGatewa
     
     if (rout) {
       const nextResource = rout.resource ? (resource ?? '').substring(rout.resource.length) : resource;
-      return await rout({ ...event, _resource: nextResource } as APIGatewayProxyEvent);
+      return await rout({ ...event, _resource: nextResource });
     }
     return notFoundResponse;
   };
 }
 
-export function route(resource: string, method: HttpMethod | undefined, handler: Handler, filter?: Filter): RoutingHttpHandler {
+export function route<Req extends Request, Res>(resource: string, method: HttpMethod | undefined, handler: Handler<Req, Res>, filter?: Filter<Req, Res>): RoutingHttpHandler<Req, Res> {
   const filteredHandler = filter ? filter(handler) : handler;
-  const a: any = (event: APIGatewayProxyEvent) => filteredHandler(event);
+  const a: any = (event: Req) => filteredHandler(event);
   a.resource = resource;
   a.method = method;
   return a;
 }
 
-export function bind(resourceInfo: ResourceInfo, handler: Handler, ...filters: Filter[]): RoutingHttpHandler {
+export function bind<Req extends Request, Res>(resourceInfo: ResourceInfo, handler: Handler<Req, Res>, ...filters: Filter<Req, Res>[]): RoutingHttpHandler<Req, Res> {
   const [resource, method] = allResourceInfo(resourceInfo);
   return route(resource, method,
     hasRouting(handler) ? router([handler]) : handler,
     combineFilters(...filters));
-}
-
-export function root(apis: Api[], ...filters: Filter[]): Handler {
-  return router(apis.map(api => bind(api.resource, api.handle, ...filters)));
 }

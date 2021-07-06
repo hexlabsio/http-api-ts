@@ -1,27 +1,32 @@
-# apigateway-ts
+# http-api-ts
 
-A simple way to create routes and routers for HTTP request from API Gateway for AWS Lambda.
+A simple way to create routes and routers for HTTP request in Typescript.
 
 ## Get Started
 
-Create an AWS Lambda with a simple route matching `GET /hello` returning `HTTP 200 world` and `HTTP 404` for anything else
+Create an HTTP Handler with a simple route matching `GET /hello` returning `HTTP 200 world` and `HTTP 404` for anything else
 
 ```typescript
-export const handler = router([
+const handler = router([
   route('/hello', HttpMethod.GET, async () => ({statusCode: 200, body: 'world'}))
 ]);
+// Call locally
+console.log(await handler({resource: '/hello', httpMethod: 'GET'}))
 ```
 
 ## Handlers
 
 ```typescript
-type Handler = (event: APIGatewayProxyEvent) => Promise<APIGatewayProxyResult>
+export type Request = { resource: string, httpMethod: string, headers?: any };
+
+export type Handler<Req extends Request = Request, Res = any> = (request: Req) => Promise<Res>;
 ```
 
-A function that takes an API Gateway Proxy event and returns an API Gateway Proxy Result these types come from @types/aws-lambda and describe the request and response types for an AWS Lambda when triggered from API Gateway. For example: 
+A function that takes a Request event and returns a Response For example an AWS API Gateway handler in lambda: 
 
 ```typescript
-const helloWorldHandler: Handler = async event => ({
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+const helloWorldHandler: Handler<APIGatewayProxyEvent, APIGatewayProxyResult> = async event => ({
   statusCode: 200,
   body: '{"msg": "hello world"}'
 })
@@ -35,7 +40,7 @@ Handlers are passed to routers shown below.
 Routers provide a way to route requests to a particular handler based on resources like /a/b/1 and http methods like GET, PUT, POST
 
 ```typescript
-function router(routes: RoutingHttpHandler[], notFoundResponse: APIGatewayProxyResult = { statusCode: 404, body: '' }): Handler
+function router<Req extends Request, Res>(routes: RoutingHttpHandler<Req, Res>[], notFoundResponse: Res = { statusCode: 404, body: '' }): Handler<Req, Res>
 ```
 
 RoutingHttpHandlers can be created using one of the following methods and can be nested:
@@ -115,5 +120,5 @@ Apigateway-ts includes some useful filters as part of the library
 - httpErrorFilter: Catches errors thrown by the handler returning 500 with the thrown error message
 - contentType : Sets the content type to whatever you want it to be
 - versionFilter: Takes a version argument and logs warnings if header (default X-API-VERSION) does not match
-
+- all: Combines all the above filters into one
 

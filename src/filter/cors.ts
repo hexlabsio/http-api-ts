@@ -1,4 +1,4 @@
-import {lookup} from "../index";
+import {lookup, Request} from "../index";
 import {Filter} from "./filter";
 
 export interface CorsConfig {
@@ -46,7 +46,7 @@ function corsAllowOriginHeader(headers: { [key: string]: string | undefined }, o
   return {};
 }
 
-export function corsFilter(config: CorsConfig): Filter {
+export function corsFilter<Req extends Request & { headers?: any }, Res extends {headers?: any}>(config: CorsConfig): Filter<Req, Res> {
   const corsHeaders = corsHeadersFor(config);
   return next => async event => {
     const result = await next(event);
