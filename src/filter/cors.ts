@@ -36,9 +36,9 @@ function corsHeadersFor(config: CorsConfig): { [key: string]: string } {
 function corsAllowOriginHeader(headers: { [key: string]: string | undefined }, originConfig: CorsConfig['origins']): { [key: string]: string } {
   const originKey = headerKeyFor('origins');
   if(originConfig === undefined) return {};
-  if(originConfig === '*' || originConfig === null) return { [originKey]: `${originConfig}` };
   const originHeader = lookup(headers, 'origin');
   if(originHeader) {
+    if(originConfig === '*' || originConfig === null) return { [originKey]: originHeader };
     if(originConfig.find(origin => originHeader.match(origin))) {
       return { [originKey]: originHeader };
     }

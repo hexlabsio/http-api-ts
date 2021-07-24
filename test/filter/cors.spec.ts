@@ -68,11 +68,13 @@ describe('Cors Filter', () => {
   });
   
   describe('Access-Control-Allow-Origin', () => {
-    it('should set origin to *', async () => {
-      await verifyHeaders( { origins: '*' }, { 'Access-Control-Allow-Origin': '*' });
+    it('should set origin when *', async () => {
+      const event: Partial<APIGatewayProxyEvent> = {headers: {'Origin': 'abc.co.uk'}};
+      await verifyHeaders( { origins: '*' }, { 'Access-Control-Allow-Origin': 'abc.co.uk' }, event);
     });
     it('should set origin to null', async () => {
-      await verifyHeaders( { origins: null }, { 'Access-Control-Allow-Origin': 'null' });
+      const event: Partial<APIGatewayProxyEvent> = {headers: {'Origin': 'abc.co.uk'}};
+      await verifyHeaders( { origins: null }, { 'Access-Control-Allow-Origin': 'abc.co.uk' }, event);
     });
     it('should not set origin when none match', async () => {
       const event: Partial<APIGatewayProxyEvent> = {headers: {'Origin': 'abc.co.uk'}};

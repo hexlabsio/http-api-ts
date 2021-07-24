@@ -8,3 +8,6 @@ export interface RoutingHttpHandler<Req extends Request,Res> extends Handler<Req
   resource: string;
   method?: HttpMethod;
 }
+
+
+export type Filter<Req extends Request = Request, Res = any> = (handler: (request: Req) => Promise<Res>) => ((request: Req) => Promise<Res>)

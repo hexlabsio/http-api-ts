@@ -1,5 +1,5 @@
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {bind, Filter, Handler as H, HttpMethod, request, route, router, withFilters} from "../../src";
+import {bind, Filter, Handler as H, HttpMethod, request, route, router} from "../../src";
 
 type Handler = H<APIGatewayProxyEvent, APIGatewayProxyResult>
 
@@ -91,7 +91,7 @@ describe('filter', () => {
     const routesBar = bind([basePath + "/bar", HttpMethod.GET],
       bind(["/{barId}", HttpMethod.GET], echoHandler, addBarFilter)
     );
-    const api = withFilters<Handler>(router([routesBaz, routesBar]), addFooFilter);
+    const api = addFooFilter(router([routesBaz, routesBar]));
     const bazHeaderRes = await api(request({
       resource: basePath + "/baz/{bazId}",
       httpMethod: "GET"

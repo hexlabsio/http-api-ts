@@ -14,6 +14,8 @@ const handler = router([
 console.log(await handler({resource: '/hello', httpMethod: 'GET'}))
 ```
 
+ > Try this on runkit https://runkit.com/embed/gru6l8nuoeyu
+
 ## Handlers
 
 ```typescript

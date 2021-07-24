@@ -70,7 +70,6 @@ export function parseJson<T>(request: APIGatewayProxyEvent): T {
 export * from './router';
 export * from './http-method';
 export * from './handler';
-export * from './filter/filter';
 export * from './filter/cors';
 export * from './filter/error';
 export * from './filter/logging';
