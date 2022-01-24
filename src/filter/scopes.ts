@@ -34,19 +34,23 @@ function flattenedPaths(pathsInfo: PathsSecurity): Record<string, MethodSecurity
     }, {} as Record<string, MethodSecurity>);
 }
 
-export function checkScopes<Req extends Request, Res extends {statusCode: number, body?: string}>(security: PathsSecurity, scopeFor: (event: Req) => string | undefined): Filter<Req, Res> {
+export function checkScopes<Req extends Request, Res extends {statusCode: number, body?: string}>(security: PathsSecurity, scopeFor: (event: Req) => string | string[] | undefined, ignoreNoScopes = false): Filter<Req, Res> {
     const flat = flattenedPaths(security);
     const forbidden = { statusCode: 403, body: 'Forbidden' } as Res;
     return next => async event => {
         const matchedSecurity = flat[event.resource] ?? {};
         const matchedScopes = matchedSecurity[event.httpMethod?.toUpperCase() ?? ''];
-        if(!(matchedScopes) || matchedScopes.scopes?.length === 0) {
-            return forbidden
+        if(!matchedScopes || matchedScopes.scopes?.length === 0) {
+            if(!ignoreNoScopes) return forbidden
         }
-        if(matchedScopes) {
+        if(matchedScopes && matchedScopes.scopes?.length !== 0) {
             const allowedScopes = matchedScopes.scopes ?? [];
-            const scope = scopeFor(event);
-            if(!scope || !allowedScopes.includes(scope)) return forbidden;
+            const scopes = scopeFor(event);
+            if(!scopes){
+                return forbidden;
+            } else if(Array.isArray(scopes)) {
+                if(!scopes.some(it => allowedScopes.includes(it))) return forbidden;
+            } else if(!allowedScopes.includes(scopes)) return forbidden;
         }
         return await next(event);
     }

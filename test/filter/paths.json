@@ -8,7 +8,7 @@
         ]
       },
       "POST": {
-        "scopes": []
+        "scopes": ["write:chicken"]
       }
     },
     "methods": [
