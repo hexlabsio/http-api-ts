@@ -1,0 +1,56 @@
+{
+  "/chicken": {
+    "security": {
+      "GET": {
+        "scopes": [
+          "read:chicken",
+          "write:chicken"
+        ]
+      },
+      "POST": {
+        "scopes": []
+      }
+    },
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "paths": {
+      "/{chickenId}": {
+        "security": {
+          "GET": {
+            "scopes": [
+              "read:chicken",
+              "write:chicken"
+            ]
+          },
+          "PUT": {
+            "scopes": []
+          },
+          "DELETE": {
+            "scopes": [
+              "write:chicken"
+            ]
+          }
+        },
+        "methods": [
+          "GET",
+          "PUT",
+          "DELETE"
+        ],
+        "paths": {}
+      }
+    }
+  },
+  "/schema": {
+    "security": {
+      "GET": {
+        "scopes": []
+      }
+    },
+    "methods": [
+      "GET"
+    ],
+    "paths": {}
+  }
+}

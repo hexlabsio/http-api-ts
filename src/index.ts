@@ -76,3 +76,4 @@ export * from './filter/logging';
 export * from './filter/content-type';
 export * from './filter/version-filter';
 export * from './filter/all';
+export * from './api';
