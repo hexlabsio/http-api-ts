@@ -1,23 +1,20 @@
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {checkScopes} from "../../src/filter/scopes";
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import paths from './paths.json'
 import {claimsFrom} from "../../src/claims";
-import {APIGatewayEventRequestContext} from "aws-lambda/common/api-gateway";
 
 interface Claims {
   scope: string;
   otherScopes: string[];
 }
 
-const requestContext = { authorizer: { claims: { scope: 'read:chicken', otherScopes: ['write:chicken']} } } as unknown as APIGatewayEventRequestContext
+const headers = { Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZSI6InJlYWQ6Y2hpY2tlbiIsIm90aGVyU2NvcGVzIjpbIndyaXRlOmNoaWNrZW4iXX0.xA-zQdd-r5mpgseIZ1jf_JJXDksl-nyJ64cKIw-jXqA' } as any;
 
-const getEvent = { body: 'test', resource: '/chicken/{chickenId}', httpMethod: 'GET', requestContext } as APIGatewayProxyEvent
-const deleteEvent =  { body: 'test', resource: '/chicken/{chickenId}', httpMethod: 'DELETE', requestContext } as APIGatewayProxyEvent
-const postEvent =  { body: 'test', resource: '/chicken', httpMethod: 'POST', requestContext } as APIGatewayProxyEvent
-const putEvent =  { body: 'test', resource: '/chicken/{chickenId}', httpMethod: 'PUT', requestContext } as APIGatewayProxyEvent //put has no associated scopes
+const getEvent = { body: 'test', resource: '/chicken/{chickenId}', httpMethod: 'GET', headers } as APIGatewayProxyEvent
+const deleteEvent =  { body: 'test', resource: '/chicken/{chickenId}', httpMethod: 'DELETE', headers } as APIGatewayProxyEvent
+const postEvent =  { body: 'test', resource: '/chicken', httpMethod: 'POST', headers } as APIGatewayProxyEvent
+const putEvent =  { body: 'test', resource: '/chicken/{chickenId}', httpMethod: 'PUT', headers } as APIGatewayProxyEvent //put has no associated scopes
 
 const successHandler = async () => { return {statusCode: 200, body: 'Hello'} };
 

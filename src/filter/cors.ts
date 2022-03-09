@@ -39,7 +39,7 @@ function corsAllowOriginHeader(headers: { [key: string]: string | undefined }, o
   const originHeader = lookup(headers, 'origin');
   if(originHeader) {
     if(originConfig === '*' || originConfig === null) return { [originKey]: originHeader };
-    if(originConfig.find(origin => originHeader.match(origin))) {
+    if(originConfig.find(origin => origin === '*' || originHeader.match(origin))) {
       return { [originKey]: originHeader };
     }
   }
