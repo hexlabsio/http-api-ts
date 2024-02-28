@@ -1,6 +1,6 @@
 # http-api-ts
 
-A simple way to create routes and routers for HTTP request in Typescript.
+A simple way to create routes and routers for HTTP request in Typescript. 
 
 ## Get Started
 
